@@ -1,0 +1,35 @@
+body {
+    width: min-content;
+    text-align: center;
+    margin: auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap:20px;
+    background-color: #000;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(70, 15px);
+    grid-template-rows: repeat(40, 15px);
+}
+
+.grid-container div {
+    border:1px solid #50727B;
+}
+
+button {
+    background-color: black;
+    color: #FFF;
+    font-size: 20px;
+    font-weight: 900px;
+    border: 1px solid #FFF;
+    cursor: pointer;
+}
+
+.alive{
+    background-color: #D2DE32;
+}
