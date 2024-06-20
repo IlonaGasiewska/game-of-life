@@ -1,24 +1,14 @@
 const gridContainer = document.querySelector('.grid-container');
-const startBtn = document.querySelector('.start-btn')
-const stopBtn = document.querySelector('.stop-btn')
+const startBtn = document.querySelector('.start-btn');
+const stopBtn = document.querySelector('.stop-btn');
+const randomBtn = document.querySelector('.random-btn');
 
 const numRows = 40;
 const numColumns = 70;
 const allCells = numRows * numColumns;
 
 let aliveCells = [];
-
-const makeCellAlive = (e) => {
-    const cell = document.querySelector(`.${e.target.className}`);
-    cell.classList.add("alive");
-    aliveCells.push(e.target.className);
-};
-
-const makeCellDead = (e) => {
-    const cell = document.querySelector(`.${e.target.className.slice(0,-6)}`);
-    aliveCells = aliveCells.filter(cell => cell != e.target.className);
-    cell.classList.remove("alive");
-};
+let intervalID;
 
 const createGrid = () => {
     for (let i = 0; i < allCells; i++) {
@@ -26,59 +16,105 @@ const createGrid = () => {
         gridItem.classList.add(`cell-${i}`);
         gridContainer.appendChild(gridItem);
 
-        const cell = document.querySelector(`.cell-${i}`);
-        cell.addEventListener("click",(e) => { 
-            if(cell.classList.contains('alive')){
-                makeCellDead(e);
+        gridItem.addEventListener("click", (e) => {
+            const cellClass = e.target.className;
+            if (aliveCells.includes(cellClass)) {
+                makeCellDead(cellClass);
             } else {
-                makeCellAlive(e);
+                makeCellAlive(cellClass);
             }
         });
-    };
+    }
 };
 
-createGrid();
+const makeCellAlive = (cellClass) => {
+    document.querySelector(`.${cellClass}`).classList.add("alive");
+    if (!aliveCells.includes(cellClass)) {
+        aliveCells.push(cellClass);
+    }
+};
 
-const playGneneration = () => {
-    const deadCellsInGeneration = [];
+const makeCellDead = (cellClass) => {
+    document.querySelector(`.${cellClass}`).classList.remove("alive");
+    aliveCells = aliveCells.filter(c => c !== cellClass);
+};
 
-    aliveCells.forEach(cell =>{
-        const cellNeighborRight = document.querySelector(`.cell-${+(cell.slice(5,-6)) + 1}`);
-        const cellNeighborLeft = document.querySelector(`.cell-${+(cell.slice(5,-6)) -1}`);
-        const cellNeighborUp = document.querySelector(`.cell-${+(cell.slice(5,-6)) -70}`);
-        const cellNeighborDown = document.querySelector(`.cell-${ +(cell.slice(5,-6)) +70}`);
+const getNeighbors = (index) => {
+    console.log(numColumns)
+    const row = Math.floor(index / numColumns);
+    const col = index % numColumns;
+    const neighbors = [];
 
-        const cellNeighbors = [cellNeighborRight, cellNeighborLeft, cellNeighborUp, cellNeighborDown];
-        const aliveNeighbor = [];
-
-        cellNeighbors.forEach(neighbor => neighbor !== null & neighbor.classList.contains('alive') && aliveNeighbor.push(neighbor.className))
-
-        if(aliveNeighbor < 2){
-            deadCellsInGeneration.push(cell);
-        } else if (aliveNeighbor >= 4){
-            deadCellsInGeneration.push(cell);
+    for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+            if (i === 0 && j === 0) continue;
+            const newRow = row + i;
+            const newCol = col + j;
+            if (newRow >= 0 && newRow < numRows && newCol >= 0 && newCol < numColumns) {
+                neighbors.push(newRow * numColumns + newCol);
+            }
         }
-        
-        console.log(aliveNeighbor)
-    })
+    }
+    return neighbors;
+};
 
-    console.log(deadCellsInGeneration)
-}
+const playGeneration = () => {
+    const newAliveCells = [];
+    const potentialCells = {};
 
+    aliveCells.forEach(cellClass => {
+        const index = +cellClass.split('-')[1];
+        const neighbors = getNeighbors(index);
+        let aliveNeighborCount = 0;
+
+        neighbors.forEach(neighborIndex => {
+            const neighborClass = `cell-${neighborIndex}`;
+            if (aliveCells.includes(neighborClass)) {
+                aliveNeighborCount++;
+            } else {
+                potentialCells[neighborClass] = (potentialCells[neighborClass] || 0) + 1;
+            }
+        });
+
+        if (aliveNeighborCount === 2 || aliveNeighborCount === 3) {
+            newAliveCells.push(cellClass);
+        }
+    });
+
+    for (let [cellClass, count] of Object.entries(potentialCells)) {
+        if (count === 3) {
+            newAliveCells.push(cellClass);
+        }
+    }
+
+    aliveCells.forEach(cellClass => makeCellDead(cellClass));
+    newAliveCells.forEach(cellClass => makeCellAlive(cellClass));
+    aliveCells = newAliveCells;
+};
 
 const start = () => {
-    const newGeneration = [];
-
-    intervalID  = setInterval(()=>{
-      playGneneration()
-    },1000); 
-}
+    if (!intervalID) {
+        intervalID = setInterval(playGeneration, 100);
+    }
+};
 
 const stop = () => {
-    clearInterval(intervalID)
-}
+    clearInterval(intervalID);
+    intervalID = null;
+};
+
+const randomizeGrid = () => {
+    aliveCells.forEach(cellClass => makeCellDead(cellClass));
+    aliveCells = [];
+    for (let i = 0; i < allCells; i++) {
+        if (Math.random() < 0.2) {
+            makeCellAlive(`cell-${i}`);
+        }
+    }
+};
 
 startBtn.addEventListener("click", start);
 stopBtn.addEventListener("click", stop);
+randomBtn.addEventListener("click", randomizeGrid);
 
-
+createGrid();
