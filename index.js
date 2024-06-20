@@ -2,6 +2,7 @@ const gridContainer = document.querySelector('.grid-container');
 const startBtn = document.querySelector('.start-btn');
 const stopBtn = document.querySelector('.stop-btn');
 const randomBtn = document.querySelector('.random-btn');
+const resetBtn = document.querySelector('.reset-btn');
 
 const numRows = 40;
 const numColumns = 70;
@@ -18,8 +19,8 @@ const createGrid = () => {
 
         gridItem.addEventListener("click", (e) => {
             const cellClass = e.target.className;
-            if (aliveCells.includes(cellClass)) {
-                makeCellDead(cellClass);
+            if (cellClass.includes("alive")) {
+                makeCellDead(cellClass.slice(0,-6));
             } else {
                 makeCellAlive(cellClass);
             }
@@ -28,19 +29,18 @@ const createGrid = () => {
 };
 
 const makeCellAlive = (cellClass) => {
-    document.querySelector(`.${cellClass}`).classList.add("alive");
-    if (!aliveCells.includes(cellClass)) {
-        aliveCells.push(cellClass);
-    }
+    const cell = document.querySelector(`.${cellClass}`);
+    cell.classList.add("alive");
+    aliveCells.push(cellClass);
 };
 
 const makeCellDead = (cellClass) => {
-    document.querySelector(`.${cellClass}`).classList.remove("alive");
+    const cell = document.querySelector(`.${cellClass}`);
+    cell.classList.remove("alive");
     aliveCells = aliveCells.filter(c => c !== cellClass);
 };
 
 const getNeighbors = (index) => {
-    console.log(numColumns)
     const row = Math.floor(index / numColumns);
     const col = index % numColumns;
     const neighbors = [];
@@ -113,8 +113,15 @@ const randomizeGrid = () => {
     }
 };
 
+const resetGrid = () => {
+    aliveCells.forEach(cellClass => makeCellDead(cellClass));
+    aliveCells = [];
+    stop();
+};
+
 startBtn.addEventListener("click", start);
 stopBtn.addEventListener("click", stop);
 randomBtn.addEventListener("click", randomizeGrid);
+resetBtn.addEventListener("click", resetGrid);
 
 createGrid();
